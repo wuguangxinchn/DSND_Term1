@@ -58,8 +58,12 @@ def main():
     chkp_model = load_checkpoint(args.checkpoint)
     print(chkp_model)
 
-    with open('cat_to_name.json', 'r') as f:
-        cat_to_name = json.load(f)
+    if args.category_names:
+        with open(args.category_names, 'r') as f:
+            cat_to_name = json.load(f)
+    else:
+        with open('cat_to_name.json', 'r') as f:
+            cat_to_name = json.load(f)
 
     if args.filepath == None:
         img_num = random.randint(1, 102)
