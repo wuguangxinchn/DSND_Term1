@@ -19,6 +19,7 @@ def parse_args():
     parser.add_argument('data_dir')
     parser.add_argument('--arch', dest='arch', default='vgg16', choices=['vgg16', 'vgg13'])
     parser.add_argument('--learning_rate', dest='learning_rate', default='0.001')
+    parser.add_argument('--hidden_units', dest='hidden_units', default='2048')
     parser.add_argument('--epochs', dest='epochs', default='5')
     parser.add_argument('--gpu', action="store_true", default=True)
     return parser.parse_args()
@@ -116,26 +117,17 @@ def main():
     for param in model.parameters():
         param.requires_grad = False
 
-    if args.arch == "vgg13":
-        feature_num = model.classifier[0].in_features
-        classifier = nn.Sequential(OrderedDict([
-                                  ('fc1', nn.Linear(feature_num, 1024)),
-                                  ('relu1', nn.ReLU()),
-                                  ('dropout', nn.Dropout(p=0.2)),
-                                  ('fc2', nn.Linear(1024, output_size)),
-                                  ('output', nn.LogSoftmax(dim=1))]))
-    elif args.arch == "vgg16":
-        feature_num = model.classifier[0].in_features
-        classifier = nn.Sequential(OrderedDict([
-                                  ('fc1', nn.Linear(feature_num, 3136)),
-                                  ('relu1', nn.ReLU()),
-                                  ('dropout', nn.Dropout(p=0.2)),
-                                  ('fc2', nn.Linear(3136, 784)),
-                                  ('relu2', nn.ReLU()),
-                                  ('dropout', nn.Dropout(p=0.2)),
-                                  ('output', nn.Linear(784, output_size)),
-                                  ('softmax', nn.LogSoftmax(dim=1))]))
-
+    hidden_units = int(args.hidden_units)
+    feature_num = model.classifier[0].in_features
+    classifier = nn.Sequential(OrderedDict([
+                              ('fc1', nn.Linear(feature_num, 4096)),
+                              ('relu1', nn.ReLU()),
+                              ('dropout1', nn.Dropout(p=0.2)),
+                              ('fc2', nn.Linear(4096, hidden_units)),
+                              ('relu2', nn.ReLU()),
+                              ('dropout2', nn.Dropout(p=0.2)),
+                              ('output', nn.Linear(hidden_units, output_size)),
+                              ('softmax', nn.LogSoftmax(dim=1))]))
     model.classifier = classifier
     criterion = nn.NLLLoss()
     optimizer = optim.Adam(model.classifier.parameters(), float(args.learning_rate))
